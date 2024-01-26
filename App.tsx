@@ -24,7 +24,7 @@ import {
   LearnMoreLinks,
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
-import FoodDataModule from './FoodDataModule';
+import FoodDataModule, {FoodDataEvents} from './FoodDataModule';
 
 type SectionProps = PropsWithChildren<{
   title: string;
@@ -63,9 +63,15 @@ function App(): React.JSX.Element {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
   useEffect(() => {
-    FoodDataModule.getData('28800000').then(value => {
-      console.log(value);
+    // FoodDataModule.getData('28800000').then(value => {
+    //   console.log(value);
+    // });
+    FoodDataEvents.addListener('Calories', data => {
+      console.log(data);
     });
+    return () => {
+      FoodDataEvents.removeAllListeners('Calories');
+    };
   }, []);
 
   return (

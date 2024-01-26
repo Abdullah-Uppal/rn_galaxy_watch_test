@@ -3,11 +3,13 @@ package com.samsung.android.app.foodnote
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
+import com.facebook.react.modules.core.DeviceEventManagerModule
 import com.samsung.android.app.foodnote.data.DailyIntakeCalories
 import com.samsung.android.sdk.healthdata.HealthConnectionErrorResult
 import com.samsung.android.sdk.healthdata.HealthConstants
@@ -47,8 +49,6 @@ class FoodDataModule(reactApplicationContext: ReactApplicationContext): ReactCon
     private var mHealthDeviceManager: HealthDeviceManager
 
     init {
-    }
-    init {
         store = HealthDataStore(reactApplicationContext.applicationContext,  mConnectionListener);
         store.connectService()
         dataHelper = FoodDataHelper(store, null)
@@ -77,8 +77,13 @@ class FoodDataModule(reactApplicationContext: ReactApplicationContext): ReactCon
             )
             .addGroup(HealthConstants.Nutrition.MEAL_TYPE, aliasGroupOfMealType)
             .build()
-        mHealthDataResolver.aggregate(request).setResultListener { result ->
-           promise.resolve(10)
+        mHealthDataResolver.aggregate(request).setResultListener { res ->
+
+            val params = Arguments.createMap().apply {
+                putString("calories", res.resultCursor.getString(0))
+            }
+            sendEvent(reactApplicationContext, "Calories", params)
+//           promise.resolve(10)
         }
 
 //        return Single.fromCallable {
@@ -104,6 +109,18 @@ class FoodDataModule(reactApplicationContext: ReactApplicationContext): ReactCon
 //            .toMap({ data -> data.getInt(aliasGroupOfMealType) }
 //            ) { data -> data.getFloat(aliasSumOfCalorie) }
 //            .map(DailyIntakeCalories::fromMap)
+    }
+    private fun sendEvent(reactContext: ReactContext, eventName: String, params: WritableMap?) {
+    reactApplicationContext
+      .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+      .emit(eventName, params)
+    }
+    @ReactMethod
+    fun addListener(eventName: String) {
+    }
+    @ReactMethod
+    fun removeListeners(count: Int) {
+
     }
 
 
